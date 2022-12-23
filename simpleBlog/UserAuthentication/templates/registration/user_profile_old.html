@@ -1,0 +1,66 @@
+{% extends 'iframe_base.html' %}
+{% load static %}
+
+<!-- Override default page title -->
+{% block title%}
+User Profile
+{% endblock %}
+
+{% block frame_content %}
+
+<h3>User Profile</h3>
+<!-- Bio Card-->
+<br /><br />
+{% if user.id == profile.user.id %}
+
+<div class="card mb-3">
+    <div class="row g-0">
+        <div class="col-md-2">
+            {% if current_user.profile_img %}
+            <img src="{{ current_user.profile_img.url }}" class="img-fluid rounded-start">
+            {% else %}
+            <img src="{% static 'theBlog/images/avatar.jpg' %}" class="img-fluid rounded-start">
+            {% endif %}
+        </div>
+        <div class="col-md-10">
+            <div class="card-body">
+                <h5 class="card-title">{{ current_user.user.first_name }} {{ current_user.user.last_name }}</h5>
+                <p class="card-text"><small class="text-muted">
+                        {% if current_user.link1 %}
+                        | <a href="{{ current_user.link1 }}" class="text-muted">{{ current_user.link1_name}}</a> |
+                        {% endif %}
+
+                        {% if current_user.link2 %}
+                        <a href="{{ current_user.link2 }}" class="text-muted">{{ current_user.link2_name}}</a> |
+                        {% endif %}
+
+                        {% if current_user.link3 %}
+                        <a href="{{ current_user.link3 }}" class="text-muted">{{ current_user.link3_name}}</a> |
+                        {% endif %}
+
+                        {% if current_user.link4 %}
+                        <a href="{{ current_user.link4 }}" class="text-muted">{{ current_user.link4_name}}</a> |
+                        {% endif %}
+
+                        {% if current_user.link5 %}
+                        <a href="{{ current_user.link5 }}" class="text-muted">{{ current_user.link5_name}}</a> |
+                        {% endif %}
+
+                        {% if current_user.link6 %}
+                        <a href="{{ current_user.link6 }}" class="text-muted">{{ current_user.link6_name}}</a> |
+                        {% endif %}
+                    </small></p>
+
+                <p class="card-text">{{ current_user.bio }}</p>
+                <a href="{% url 'edit_profile_page' user.profile.id  %}" class="btn btn-outline-secondary btn-sm">Edit Profile</a>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+You are not the owner of this page.
+{% endif%}
+
+{% endblock %}
