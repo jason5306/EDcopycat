@@ -1,0 +1,25 @@
+<div class="mb-3">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.media }}
+        {{ form.as_p }}
+        
+        <button class="btn btn-success btn-sm">Submit</button>
+        <button type="button" onclick="HandleCancel()" class="btn btn-light btn-sm">Cancel</button>
+
+    </form>
+    
+
+<script>
+    
+    $('label').attr("style","display:none;")
+    console.log(localStorage.getItem("post_id"));
+    document.getElementById('id_post').setAttribute('value', localStorage.getItem("post_id"));
+    document.getElementById('author_id').setAttribute('value', localStorage.getItem("name"));
+    document.getElementById('id_parent').setAttribute('value', localStorage.getItem("parent"));
+    localStorage.removeItem("post_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("parent");
+    
+    
+</script>

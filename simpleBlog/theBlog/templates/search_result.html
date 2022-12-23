@@ -1,0 +1,86 @@
+{% load highlight_search %}
+{% load static %}
+<style>
+
+.scrollable{
+  overflow-y: auto;
+  max-height: 100px;
+  
+}
+.circle-img {
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+}
+
+.circle-img img {
+  height: 100%;
+  transform: translateX(-50%);
+  margin-left: 50%;
+}
+</style>
+{% if search %}
+{% if query_post %}
+{% for post in query_post %}
+
+
+<div class="card">
+
+  <div class="card-body clickable-text" id="{{post.id}}" onclick="load_search_dest(this)">
+    <div class="d-flex align-items-center">
+      <div class="flex-shrink-0 align-self-start">
+        <div class="circle-img img-circle">
+          {% if post.author.profile.profile_img %}
+          <img src="{{ post.author.profile.profile_img.url }}" class="img-fluid rounded-circle" alt="profile_img"> 
+          {% else %}
+          <img src="{% static 'theBlog/images/avatar.jpg' %}" class="img-fluid rounded-circle" alt="profile_img">
+          {% endif %}
+      </div>
+      </div>
+      <div class="p-2 flex-grow-1 flex-column">
+        <div class="card-title">
+          <p class="lh-1">
+            <strong>{{ post.title|highlight_search_title:search }}</strong><br>
+            <small>{{ post.author.first_name }} {{ post.author.last_name }}</small>
+            <small class="text-muted" title='Post: {{ post.post_date|date:"Y/m/d g:i a" }} - Edit: {{ post.edit_date|date:"Y/m/d g:i a" }}'>
+                {{ post.edit_date|timesince }} ago in
+                <a>#{{ post.category }}</a>
+            </small>
+          </p>
+        </div>
+        <div class="col-12">
+          <div class="scrollable">
+            <p class="card-text">
+                {{post.body|highlight_search_body:search}}
+                
+                {% if post.comments.all %}
+                  {% for comment in post.get_comments %}
+                      {% include 'search_comment.html' with comment=comment %}
+    
+                  {% endfor %}
+                {% endif %}
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    
+
+  </div>
+</div>
+
+<br>
+
+
+{% endfor %}
+{% else %}
+No results
+{% endif %}
+{% else %}
+No results
+{% endif %}     
+

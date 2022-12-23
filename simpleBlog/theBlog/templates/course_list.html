@@ -1,0 +1,22 @@
+{% extends 'iframe_base.html' %}
+
+
+{% block title%}
+Courses
+{% endblock %}
+
+{% block frame_content %}
+<div class="container">
+    {% for course in user_course_list %}
+    <div class="card" style="width: 18rem;" id="{{course.id}}">
+        <div class="card-body">
+        <h5 class="card-title">{{course.name}}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <a href="{% url 'home' course.id %}" class="card-link">GO</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,94 @@
+<style>a{TEXT-DECORATION:none}</style> 
+<div class="container">
+    <div class="card text-center" id="archive-confirm-card" style="display: none;">
+        <div class="card-body">
+          <p class="card-text">Mark all notifications as read?</p>
+        </div>
+        <div class="card-footer text-muted">
+            <a href="#" class="card-link" onclick="load_update_notification()">Yes</a>
+            <a href="#" class="card-link" onclick="load_archive_confirm_card()">Cancel</a>
+        </div>
+      </div>
+    
+    <div class="row mt-2 ml-4">
+        {% if unread_count %}
+        {{ unread_count }}
+        {% endif %}
+        <ul class="list-group">
+            {% for key, value in notice_dict.items %}
+            <strong>{{key}}</strong>
+            {% for notice in value %}
+            
+            {% if notice.unread %}
+            <li class="list-group-item list-group-item-action list-group-item-primary" id="notice_link_{{ notice.id }}">
+            {% else %}
+            <li class="list-group-item list-group-item-action list-group-item-light" id="notice_link_{{ notice.id }}">
+            {% endif%}
+                
+                    <!-- <a href="{% url 'update_notice_list' %}?post_id={{ notice.target.id }}&notice_id={{ notice.id }}"
+                       target="_blank" style="color: black;"> -->
+                    <a href="#" style="color: black;" id="{{ notice.target.id }}-{{ notice.id }}" onclick="load_post(this)">
+
+                     {% if notice.description == 'comment' %}
+                        <span style="color: #5897fb;">
+                            {{ notice.actor.first_name }} {{ notice.actor.last_name }}
+                        </span>
+                        {{ notice.verb }} your post
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+
+                     {% elif notice.description == 'reply' %}
+
+                        <span style="color: #5897fb;">
+                            {{ notice.actor.first_name }} {{ notice.actor.last_name }}
+                        </span>
+                        {{ notice.verb }} your comment in 
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+
+                     {% elif notice.description == 'like' %}
+
+                        <span style="color: #5897fb;">
+                            {{ notice.actor.first_name }} {{ notice.actor.last_name }}
+                        </span>
+                        {{ notice.verb }} your post
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+
+                     {% elif notice.description == 'solution' %}
+                     
+                        You {{ notice.verb }}
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+
+                     {% elif notice.description == 'endorse' %}
+
+                        Your post
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+                        is {{ notice.verb }}.
+
+                    {% elif notice.description == 'endorsec' %}
+
+                        Your comment in
+                        <span style="color: #01a252;">{{ notice.target.title }}</span>
+                        is {{ notice.verb }}.
+
+                     {% endif %}
+
+                    
+                    </a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <!-- {{ notice.timestamp|date:"Y/m/d H:i" }} -->
+                    {{ notice.timestamp|timesince }}
+                </li>
+            {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- <style>
+    #notice_link a:link {
+        color: black;
+    }
+
+    /* #notice_link a:visited {
+        color: lightgrey;
+    } */
+</style> -->

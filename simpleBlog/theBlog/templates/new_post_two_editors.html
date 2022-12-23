@@ -1,0 +1,94 @@
+{% extends 'iframe_base.html' %}
+
+
+{% block frame_content %}
+
+
+<h1>Add Blog Post</h1>
+<br /><br />
+
+<button id="show_ckeditor" onclick="show_ckeditor()" class="btn btn-outline-dark btn-sm">Rich Text Editor</button>
+<button id="show_mdeditor" onclick="show_mdeditor()" class="btn btn-dark btn-sm">Markdown Editor</button>
+
+<div class="mb-3">
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        Title:
+        {{ form.title }}
+        {{ form.author}}
+        Category:
+        {{ form.category }}
+        Snippet:
+        {{ form.snippet }}
+        Hearder Image:
+        <br>
+        {{ form.header_image }}
+        <br>
+        Body:
+        <br>
+        {{ form.media }}
+        {{ form.body_md}}
+        {{ form.body_r}}
+        <br>
+        <!-- Markdown editor as default -->
+        <script>
+            document.getElementById('id_body_md-wmd-wrapper').style.display = "";
+            document.getElementsByClassName('django-ckeditor-widget')[0].style.display = "none";
+        </script>
+
+        <button class="btn btn-success" onclick="clean_editor()">Post</button>
+
+    </form>
+
+</div>
+<!-- Pass user.id to the backend) -->
+<script>
+    var name = "{{ user.id }}";
+    document.getElementById('author_id').value = name;
+</script>
+
+<script>
+    var editor = 'Markdown';
+    function show_ckeditor() {
+        // highlight current editor
+        var ck_button = document.getElementById('show_ckeditor');
+        var md_button = document.getElementById('show_mdeditor');
+        ck_button.className = "btn btn-dark btn-sm";
+        md_button.className = "btn btn-outline-dark btn-sm";
+
+        // hide md editor
+        document.getElementById('id_body_md-wmd-wrapper').style.display = "none";
+        document.getElementsByClassName('django-ckeditor-widget')[0].style.display = "block";
+        editor = 'RichText';
+    };
+    function show_mdeditor() {
+        // highlight current editor
+        var md_button = document.getElementById('show_mdeditor');
+        var ck_button = document.getElementById('show_ckeditor');
+        md_button.className = "btn btn-dark btn-sm";
+        ck_button.className = "btn btn-outline-dark btn-sm";
+
+        // hide ckeditor
+        document.getElementsByClassName('django-ckeditor-widget')[0].style.display = "none";
+        document.getElementById('id_body_md-wmd-wrapper').style.display = "";
+        editor = 'Markdown';
+    };
+
+    function clean_editor() {
+        if (editor == 'Markdown') {
+            // clean rich text editor before rendering
+            document.getElementById('id_body_r').remove();
+        }
+        else {
+            // clean markdown editor before rendering
+            $('.editormd-markdown-textarea').remove()
+        }
+        // show current editor
+        console.log(editor);
+    }; 
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+ <!-- Override default page title -->
+ {% block title%}
+The Blog: New Post Category
+ {% endblock %}
+
+{% block content %}
+
+
+
+<h1>Add Blog Category</h1>
+<br/><br/>
+
+<div class="mb-3">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-success">Add Category</button>
+    </form>
+</div>
+
+<br/><br/>
+<a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+
+
+
+{% endblock %}

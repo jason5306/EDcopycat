@@ -1,0 +1,46 @@
+<div id="style">
+{% if liked %}
+
+<style>
+    .icon-wrapper .bi-heart-fill {
+    opacity: 1;
+    }
+
+    .icon-wrapper .bi-heart {
+    opacity: 0;
+    }
+
+    .icon-wrapper:hover .bi-heart-fill {
+    opacity: 0;
+    }
+
+    .icon-wrapper:hover .bi-heart {
+    opacity: 1;
+    }
+    </style>
+{% else %}
+<style>
+    .icon-wrapper .bi-heart-fill {
+    opacity: 0;
+    }
+
+    .icon-wrapper .bi-heart {
+    opacity: 1;
+    }
+
+    .icon-wrapper:hover .bi-heart-fill {
+    opacity: 1;
+    }
+
+    .icon-wrapper:hover .bi-heart {
+    opacity: 0;
+    }
+    </style>
+{% endif %}
+</div>
+#
+{% if total_likes == 0 %}
+<small class="text-danger"></small>
+{% else %}
+<small class="text-danger">{{ total_likes }}</small>
+{% endif %}

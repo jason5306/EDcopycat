@@ -1,0 +1,695 @@
+{% extends 'iframe_base.html' %}
+
+{% load static %}
+
+
+  
+{% block javascript %}
+
+<link rel="stylesheet" href="{% static 'mdeditor/css/editormd.preview.css' %}" />
+<script>
+    $('label').attr('style', 'display:none;'); 
+    $('label[for="id_is_pin"]').attr("style","display:block;")
+
+    function HandleCancel() {
+        $('.editor-area').html("");
+    }
+    function HandleCancelEdit(comment_id) {
+        $('.editor-area').html("");
+        document.getElementById('comment-body_'+comment_id).style.display = "block";
+    }
+    function HandleReply(comment_id, post_id){
+        $('.editor-area').html("");
+        // document.getElementById('comment-body_'+comment_id).style.display = "block";
+        $(".comment-body").attr("style", "display:block;")
+        localStorage.setItem("post_id",post_id);
+        localStorage.setItem("name","{{ user.id }}");
+        localStorage.setItem("parent",comment_id);
+        $("#comment_reply_"+comment_id).load("{% url 'new_reply' %}")
+    }
+    function HandleEdit(comment_id){
+        $('.editor-area').html("");
+        $('#editor-area_'+comment_id).load("http://127.0.0.1:8000/comment/X/edit".replace('X',comment_id))
+        document.getElementById('comment-body_'+comment_id).style.display = "none";
+        
+    }
+    function HandleAddComment(){
+        $('.editor-area').html("");
+        $('.comment-body').attr("style","display:;")
+        console.log("toggled");
+        localStorage.setItem("post_id","{{post.id}}");
+        localStorage.setItem("name","{{ user.id }}");
+        localStorage.setItem("parent","");
+        $("#comment_main").load("{% url 'new_reply' %}");
+    }
+    function show_delete(){
+        // $(".post-delete-form").html("");
+        // $(".post-delete-form").load("{% static 'theBlog/template/post_delete_form.html' %}");
+        $("#delete-alert").attr("style","display:block;")
+    }
+    function hide_delete(){
+        // $(".post-delete-form").html("");
+        $("#delete-alert").attr("style","display:none;")
+
+    }
+    function submit_delete(){
+        var course_id = {{post.course.id}}
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'delete_post' post.id %}",
+            dataType: "html", 
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+            success: function(jqXHR, textStatus, errorThrown){
+            parent.location.href = "{% url 'home' 0 %}".replace('0',course_id)
+            }
+            });
+        
+    }
+    function show_delete_comment(comment_id){
+        $(".comment-delete-form").html("");
+        $("#comment-delete-form-"+comment_id).load("{% static 'theBlog/template/comment_delete_form.html' %}");
+    }
+    function hide_delete_comment(){
+        $(".comment-delete-form").html("");
+    }
+    function submit_delete_comment(){
+        console.log('test')
+        $("#delete-comment-submit-button").click()
+    }
+    function hide_resolved(comment_id){
+        // $(".post-resolve-form").html("");
+        console.log(comment_id)
+        $("#comment-resolve-alert-"+comment_id).attr("style","display:none;")
+
+    }
+    function show_resolved(comment_id){
+        $(".post-resolve-form").html("");
+        $("#post-resolve-form-"+comment_id).load("{% static 'theBlog/template/post_resolve_form.html' %}");
+        // $("#comment-resolve-alert-"+comment_id).attr("style","display:block;")
+    }
+    function submit_resolved(comment_id){
+        console.log(comment_id)
+        $("#comment-resolve-button-"+comment_id).click()
+    }
+
+    function toggle_post_info(){
+        console.log($("#post-info-icon").attr('style'))
+        if($("#post-info-icon").attr('style') == "display: block;"){
+            $("#post-info-icon").attr('style', "display: none;")
+            $("#post-info").attr('style', "display: block;")
+        }
+        else{
+            $("#post-info-icon").attr('style', "display: block;")
+            $("#post-info").attr('style', "display: none;")
+        }
+
+    }
+    function submit_like_view(){
+        $.ajax({
+            url: "{% url 'like_post' post.pk %}",
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+                console.log(jqXHR.split('#')[1]);
+                $('#like_icon').html(jqXHR.split('#')[0]);
+                $('#post_total_likes').html(jqXHR.split('#')[1])
+            }
+        })
+    }
+    function submit_comment_resolve(comment_id, comment_author_id){
+        $.ajax({
+            url: "{% url 'solved_view' post.pk 0 0 %}".replace('0',comment_author_id).replace('0',comment_id),
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+
+                if(jqXHR.split('#')[0] == 'True'){
+                    $(".solve-comment-list-item").attr("style","display: none;")
+                    $("#solve-icon-"+comment_id).attr("style","display:;")
+                    $("#check-icon-"+comment_id).html(jqXHR.split('#')[1])
+                    $("#solve-icon-"+comment_id).find('a').text('Cancel solution')
+                    $("#post-resolve-icon").html(jqXHR.split('#')[2])
+                }
+                else {
+                    $(".solve-comment-list-item").attr("style","display:;")
+                    
+                    $(".bi.bi-check2.text-success").remove()
+                    $("#solve-icon-"+comment_id).find('a').text('Mark as solution')
+                    $("#post-resolve-icon").html(jqXHR.split('#')[3])
+                }
+            }
+        })
+    }
+    function submit_endorse_view(){
+        $.ajax({
+            url: "{% url 'endorse_post' post.id %}",
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+                console.log(jqXHR);
+                $('#post-endorse').html(jqXHR.split('#')[0]);
+                $('#post-endorse-alert').html(jqXHR.split('#')[0]);
+                $('#post-endorse-icon').html(jqXHR.split('#')[1])
+            }
+        })
+        $("#endorse-alert").attr("style","display:none;");   
+    }
+    function show_endorse_alert(){
+        $("#endorse-alert").attr("style","display:block;");
+        $("#post-option-dropdown").dropdown("toggle");
+    }
+    function hide_endorse_alert(){
+        $("#endorse-alert").attr("style","display:none;");
+    }
+    function submit_comment_endorse(comment_id){
+        $.ajax({
+            url: "{% url 'endorse_comment' post.pk 0  %}".replace('0',comment_id),
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+                console.log(jqXHR);
+                if(jqXHR.split('#')[0] == 'True'){
+                    $("#endose-comment-option-"+comment_id).text('Remove Endorse')
+                    $("#endorse-icon-"+comment_id).html(jqXHR.split('#')[1])
+                }
+                else{
+                    $("#endose-comment-option-"+comment_id).text('Endorse')
+                    $("#endorse-icon-"+comment_id).html("")
+                }
+            }
+        })
+    }
+    function submit_archive_post(){
+        $.ajax({
+            url: "{% url 'archived_post' post.id %}",
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+                $('#post-archive-text').html(jqXHR.split('#')[0]);
+                $('#post-archived-icon').html(jqXHR.split('#')[1]);
+            }
+        })
+    }
+    function submit_comment_archive(comment_id){
+        $.ajax({
+            url: "{% url 'archived_comment' post.pk 0  %}".replace('0',comment_id),
+            type: "POST",
+            dataType: "html",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function(jqXHR, textStatus, errorThrown){
+                console.log(jqXHR);
+                $("#archive-comment-option-"+comment_id).html(jqXHR.split('#')[0]);
+                $("#archived-icon-"+comment_id).html(jqXHR.split('#')[1])
+
+            }
+        })
+    }
+    function copy_text(obj){
+        console.log(obj.id)
+        navigator.clipboard.writeText(obj.id);
+    }
+
+
+    
+</script>
+
+
+{% endblock %}
+
+
+
+{% block frame_content %}
+<style>a{TEXT-DECORATION:none}</style> 
+<style>
+.clickable-text {
+    cursor: pointer;
+}
+.circle-img {
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+}
+
+.circle-img img {
+  height: 100%;
+  transform: translateX(-50%);
+  margin-left: 50%;
+}
+
+.icon-wrapper {
+  position: relative;
+  display: inline-block;
+  height: 1em;
+  width: 1.5em;
+  font-size: 16px;
+}
+
+.icon-wrapper .bi {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.5s;
+}
+
+.icon-wrapper .bi-reply-fill {
+  opacity: 0;
+}
+
+.icon-wrapper .bi-reply {
+  opacity: 1;
+}
+
+.icon-wrapper:hover .bi-reply-fill {
+  opacity: 1
+}
+
+.icon-wrapper:hover .bi-reply {
+  opacity: 0;
+}
+
+.icon-wrapper .bi-caret-down-fill {
+  opacity: 1;
+}
+.icon-wrapper:hover .bi-caret-down-fill {
+  opacity: 0;
+}
+.icon-wrapper .bi-caret-right-fill {
+  opacity: 0;
+}
+.icon-wrapper:hover .bi-caret-right-fill {
+  opacity: 1;
+}
+
+.icon-wrapper .text {
+  max-width: 0;
+  transition: max-width 0.5s;
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+  overflow: hidden;
+  padding-left: 24px;
+}
+.icon-wrapper:hover .text {
+    max-width: 15rem;
+    transition-delay: 0.1s;
+}
+.icon-wrapper .separator {
+  display: inline-block;
+  width: 0;
+  transition: width 0.1s;
+  transition-delay: 0.5s;
+}
+.icon-wrapper:hover .separator {
+  width: 0.5em;
+  transition-delay: unset;
+}
+
+
+
+.icon-wrapper .bi-info-circle-fill {
+  opacity: 0;
+}
+
+.icon-wrapper .bi-info-circle {
+  opacity: 1;
+}
+
+.icon-wrapper:hover .bi-info-circle-fill {
+  opacity: 1
+}
+
+.icon-wrapper:hover .bi-info-circle {
+  opacity: 0;
+}
+</style>
+{% if accessible %}
+<!-- Post -->
+<div class="container-lg pt-2">
+
+<h2>
+    {{ post.title }}<a class="text-muted clickable-text" onclick="copy_text(this)" id="{{post.id}}">#{{ post.id }}</a>
+</h2>
+
+<div class="d-flex align-items-center">
+    <div class="flex-shrink-0 align-self-start">
+        <div class="circle-img img-circle">
+            {% if post.author.profile.profile_img %}
+            <img src="{{ post.author.profile.profile_img.url }}" class="img-fluid rounded-circle" alt="profile_img"> 
+            {% else %}
+            <img src="{% static 'theBlog/images/avatar.jpg' %}" class="img-fluid rounded-circle" alt="profile_img">
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="p-2 flex-grow-1 flex-column">
+        <div class="row row-cols-2 justify-content-between">
+
+        
+        <div class="col-5">
+        <h6 class="card-title">{{ post.author.first_name }} {{ post.author.last_name }}</h6>
+        <small class="text-muted" title='Post: {{ post.post_date|date:"Y/m/d g:i a" }} - Edit: {{ post.edit_date|date:"Y/m/d g:i a" }}'>
+            {{ post.edit_date|timesince }} ago in
+            <a>#{{ post.category }}</a>
+        </small>
+        </div>
+        <div class="col-4">
+            <div class="row justify-content-start">
+                    {% if post.solved_by_comment == 0 %}
+                    <div class="col-1" title="Unresolved" id="post-resolve-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle text-muted" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                        </svg>
+                    </div>
+                    {% else %}
+                    <div class="col-1" title="Resolved" id="post-resolve-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle text-muted" viewBox="0 0 16 16" title="Resolved">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                        </svg>
+                    </div> 
+                    {% endif %}
+                    <div class="col-1" id="post-endorse-icon">
+                    {% if post.endorsed %}
+                        <div title="Endorsed">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-award text-muted" viewBox="0 0 16 16">
+                                <path d="M9.669.864 8 0 6.331.864l-1.858.282-.842 1.68-1.337 1.32L2.6 6l-.306 1.854 1.337 1.32.842 1.68 1.858.282L8 12l1.669-.864 1.858-.282.842-1.68 1.337-1.32L13.4 6l.306-1.854-1.337-1.32-.842-1.68L9.669.864zm1.196 1.193.684 1.365 1.086 1.072L12.387 6l.248 1.506-1.086 1.072-.684 1.365-1.51.229L8 10.874l-1.355-.702-1.51-.229-.684-1.365-1.086-1.072L3.614 6l-.25-1.506 1.087-1.072.684-1.365 1.51-.229L8 1.126l1.356.702 1.509.229z"/>
+                                <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1 4 11.794z"/>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    </div>
+                    <div class="col-1" id="post-archived-icon">
+                    {% if post.archived %}
+                        <div title="archived">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bookmark-heart text-muted" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 4.41c1.387-1.425 4.854 1.07 0 4.277C3.146 5.48 6.613 2.986 8 4.412z"/>
+                                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    </div>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <div class="p-0 pe-2"><small class="text-muted">{{ post.total_views }} Total Views</small></div>
+                <div class="p-0"><small class="text-muted">{{ post.unique_views_count }} Unique Views</small></div>
+                
+              </div>
+            <!-- <div class="row row-cols-2">
+                <div class="col-5">
+                    <small class="text-muted">{{ post.total_views }} Total Views</small>
+                </div>
+                <div class="col-5">
+                    <small class="text-muted">{{ post.unique_views_count }} Unique Views</small>
+                    
+                </div>
+
+            </div> -->
+            
+            
+        </div>
+
+
+        </div>
+
+        <div class="col-12">
+            <!-- Markdown Body -->
+            <div id="markdown-body" class="ps-0 pt-3">
+                <textarea style="display:none;">{{ post.body|safe }}</textarea>
+
+            </div>
+
+            <script src="{% static 'mdeditor/js/jquery.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/prettify.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/marked.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/editormd.js' %}"></script>
+
+            <script src="{% static 'mdeditor/js/lib/raphael.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/underscore.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/sequence-diagram.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/flowchart.min.js' %}"></script>
+            <script src="{% static 'mdeditor/js/lib/jquery.flowchart.min.js' %}"></script>
+
+            <script>
+                editormd.markdownToHTML("markdown-body", { 
+                    emoji: true,
+                    taskList: true,
+                    tex: true,
+                    flowChart: true,
+                    sequenceDiagram: true,
+                    codeFold: true
+                });
+            </script>
+            {% if user.is_authenticated %}
+
+            
+            <!-- <div class="row justify-content-start row-cols-auto ps-0"> -->
+            <div class="d-flex flex-row">
+                <div class="p-0">
+                    
+                    <div class="icon-wrapper">
+                        <a onclick="submit_like_view()" title="like">
+                        <div id="like_icon">
+                            {% if liked %}
+                            <style>
+                                .icon-wrapper .bi-heart-fill {
+                                opacity: 1;
+                                }
+                            
+                                .icon-wrapper .bi-heart {
+                                opacity: 0;
+                                }
+                            
+                                .icon-wrapper:hover .bi-heart-fill {
+                                opacity: 0;
+                                }
+                            
+                                .icon-wrapper:hover .bi-heart {
+                                opacity: 1;
+                                }
+                                </style>
+                            {% else %}
+                            <style>
+                                .icon-wrapper .bi-heart-fill {
+                                opacity: 0;
+                                }
+                            
+                                .icon-wrapper .bi-heart {
+                                opacity: 1;
+                                }
+                            
+                                .icon-wrapper:hover .bi-heart-fill {
+                                opacity: 1;
+                                }
+                            
+                                .icon-wrapper:hover .bi-heart {
+                                opacity: 0;
+                                }
+                                </style>
+                            {% endif %}
+                        </div>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-heart-fill text-danger clickable-text" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-heart text-dark clickable-text" viewBox="0 0 16 16">
+                            <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                        </svg>  
+                    
+                        
+                    </a>
+                </div>
+                    <!-- <a id="post_total_likes" style="padding-left: 20px;">{{ total_likes }}</a> -->
+                </div>
+
+
+                <div class="p-0" id="post_total_likes">
+                    {% if total_likes == 0 %}
+                    <small class="text-danger"></small>
+                    {% else %}
+                    <small class="text-danger">{{ total_likes }}</small>
+                    {% endif %}
+                    
+                </div>
+                <div class="p-0 ps-2 pe-1">
+
+                    <a onclick="HandleAddComment()" title="comment">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-reply text-dark" viewBox="0 0 16 16">
+                        <path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.74 8.74 0 0 0-1.921-.306 7.404 7.404 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.499.499 0 0 0 .042-.028l3.984-2.933zM7.8 10.386c.068 0 .143.003.223.006.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96v-.667z"/>
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-reply-fill text-primary" viewBox="0 0 16 16">
+                            <path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z"/>
+                        </svg> -->
+                        <small class="clickable-text text-muted">Comment</small>
+                        
+                    </a>
+            
+                </div>
+                {% if user.id == post.author.id %}
+                <div class="p-0 ps-1 pe-1">
+                    <a href="{% url 'edit_post' post.pk %}" class="clickable-text text-muted" title="edit">
+                        <small class="text-muted">Edit</small>
+                    </a>
+                </div>
+                <div class="p-0 ps-1 pe-1">
+                    <a onclick="show_delete()" class="clickable-text text-muted" title="delete">
+                        <small class="text-muted">Delete</small></a>
+                </div>
+                {% endif %}
+
+                {% if user.id == post.author.id %}
+                <div class="p-0 ps-0 pe-1">
+
+                        <button type="button" id='post-option-dropdown' title="more options" class="btn btn-sm btn-light dropdown-toggle dropdown-toggle-split border-0 bg-transparent text-muted" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <small>
+                                    {% if post.endorsed %}
+                                        <!-- <a class="text-muted"> | </a> -->
+                                        <!-- <a href="#" onclick="submit_endorse_view()" class="text-muted" id="post-endorse">Remove Endorse</a> -->
+                                        <a onclick="show_endorse_alert()" class="text-muted dropdown-item clickable-text" id="post-endorse-alert">Remove Endorse</a>
+                                    {% else %}
+                                        <!-- <a class="text-muted"> | </a> -->
+                                        <a onclick="show_endorse_alert()" class="text-muted dropdown-item clickable-text" id="post-endorse-alert">Endorse</a>
+                                    {% endif %}
+                                
+                                </small>
+                            </li>
+                            <small>
+                                {% if post.archived %}
+                                    <!-- <a class="text-muted"> | </a> -->
+                                    <!-- <a href="#" onclick="submit_endorse_view()" class="text-muted" id="post-endorse">Remove Endorse</a> -->
+                                    <a onclick="submit_archive_post()" class="text-muted dropdown-item clickable-text" id="post-archive-text">Remove from Archive</a>
+                                {% else %}
+                                    <!-- <a class="text-muted"> | </a> -->
+                                    <a onclick="submit_archive_post()" class="text-muted dropdown-item clickable-text" id="post-archive-text">Add to Archive</a>
+                                {% endif %}
+                            
+                            </small>
+                            </li>
+
+                        </ul>
+                    
+
+                    <!-- <div class="icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill text-muted" style="top: 6px;" viewBox="0 0 16 16">
+                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                          </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-right-fill text-muted" style="top: 6px;" viewBox="0 0 16 16">
+                            <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
+                        </svg>
+                        <span class="separator">
+                        <span class="text">
+                            <small>
+                                
+                                    {% if post.endorsed %}
+                                       
+                                       
+                                        <a onclick="show_endorse_alert()" class="text-muted" id="post-endorse-alert">Remove Endorse</a>
+                                    {% else %}
+                                        
+                                        <a onclick="show_endorse_alert()" class="text-muted" id="post-endorse-alert">Endorse</a>
+                                    {% endif %}
+                                
+                            </small>
+                        </span>
+                    </div> -->
+
+                </div>
+                {% endif %}
+
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    
+
+</div>
+<div class="col-12">
+    <div class="alert alert-danger" role="alert" style="display: none;" id="delete-alert">
+        <form method="POST" action="{% url 'delete_post' post.pk %}">
+            {% csrf_token %}
+            <div class="post-delete-form">
+                Confirm your action - <strong>Delete</strong> the post permanently
+                <span class="pull-right">
+                    <a onclick="submit_delete()" class="text-muted clickable-text">Yes | </a>
+                    <a onclick="hide_delete()" class="text-muted clickable-text">Cancel</a>
+                    <button class="btn btn-danger btn-sm" type="submit" style="display: none;" id="delete-submit-button">Yes</button>
+                </span>
+            </div>
+        </form>
+    </div>
+    
+    <div class="alert alert-info" role="alert" style="display: none;" id="endorse-alert">
+        Confirm your action - 
+        {% if post.endorsed %}
+        <strong>
+            <a id="post-endorse">Remove Endorse</a>
+        </strong>
+        {% else %}
+        <strong>
+            <a id="post-endorse">Endorse</a>
+        </strong>
+        {% endif %}
+        <span class="pull-right">
+        <a onclick="submit_endorse_view()" class="text-muted clickable-text">Yes | </a>
+        <a onclick="hide_endorse_alert()" class="text-muted clickable-text">Cancel</a>
+        </span>
+    </div>
+</div>
+
+
+
+
+
+
+
+    
+    
+
+
+    <!-- Comment -->
+
+    <!-- <form method="post" action="" id="comment_form">
+        {% csrf_token %}
+        {{ comment_form.media }}
+        {{ comment_form.as_p }}
+        <button type="submit" class="btn btn-primary">Comment</button>
+    </form> -->
+    <div class="editor-area" id="comment_main">
+
+    </div>
+      
+
+    {% with comments.count as total_comments %}
+        <h4 class="mt-5">
+            {{ total_comments }} comment{{ total_comments|pluralize }}
+        </h4>
+    {% endwith %}
+    {% if post.comments.all %}
+
+        {% for comment in post.get_comments %}
+            {% include 'comment.html' with comment=comment %}
+        {% endfor %}
+    {% endif %}
+
+</div>
+{% else %}
+Access Denied
+{% endif %}
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,22 @@
+{% extends 'iframe_base.html' %}
+
+
+{% block frame_content %}
+
+{% if user.id == post.author.id %}
+<h1>Edit Blog Post</h1>
+<br />
+<div class="mb-3">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.media }}
+        {{ form.as_p}}    
+
+        <button class="btn btn-success" id="confirm_edit">Confirm Editting</button>
+
+    </form>
+</div>
+{% else %}
+<h2>Access Denied</h2>
+{% endif %}
+{% endblock %}
